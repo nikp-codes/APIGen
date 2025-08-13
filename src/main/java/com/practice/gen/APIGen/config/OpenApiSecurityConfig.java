@@ -3,14 +3,15 @@ package com.practice.gen.APIGen.config;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
-import io.swagger.v3.oas.models.Operation;
-import io.swagger.v3.oas.models.PathItem;
-import io.swagger.v3.oas.models.Paths;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+
+import java.util.List;
 
 /**
  * @author Nikhil
@@ -33,19 +34,30 @@ public class OpenApiSecurityConfig {
     @Bean
     public OpenApiCustomizer globalHeaderCustomizer() {
         return openApi -> {
-            Paths paths = openApi.getPaths();
-            if (paths != null) {
-                for (PathItem pathItem : paths.values()) {
-                    for (Operation operation : pathItem.readOperations()) {
-                        Parameter headerParam = new Parameter()
-                                .in("header")
-                                .name("X-Custom-Header")
-                                .description("Global custom header added to all operations")
-                                .required(true)
-                                .schema(new StringSchema());
-                        operation.addParametersItem(headerParam);
-                    }
-                }
+            Schema<Object> lang = new Schema<>();
+            lang.setType("string");
+            lang.setEnum(List.of("hi", "ja", "zh-CN", "hi"));
+            lang.setDefault("en");
+            List<Parameter> globalHeaders = List.of(
+                    new Parameter()
+                            .in("header")
+                            .name(HttpHeaders.ACCEPT_LANGUAGE)
+                            .required(true)
+                            .schema(lang),
+                    new Parameter()
+                            .in("header")
+                            .name("X-Another-Header")
+                            .description("Another global header")
+                            .required(false)
+                            .schema(new StringSchema())
+            );
+
+            if (openApi.getPaths() != null) {
+                openApi.getPaths().values().forEach(pathItem ->
+                        pathItem.readOperations().forEach(operation ->
+                                globalHeaders.forEach(operation::addParametersItem)
+                        )
+                );
             }
         };
     }
