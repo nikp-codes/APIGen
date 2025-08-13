@@ -1,0 +1,338 @@
+openapi: 3.0.4
+info:
+  title: API Gen
+  description: |-
+    This is an API Gen practice document.
+
+    It demonstrates user management and authentication-related endpoints.
+
+    Useful resources:
+    - [Petstore Example](https://github.com/swagger-api/swagger-petstore)
+  contact:
+    email: nikm.codes@gmail.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/v1
+
+security:
+  - accessToken: []
+  - deviceToken: []
+
+tags:
+  - name: Account
+    description: Authentication, registration, and security operations
+  - name: Users
+    description: User management operations
+
+paths:
+  /account/sign-in:
+    post:
+      security: []
+      tags:
+        - Account
+      summary: User login
+      description: Authenticates a user using their credentials.
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Invalid username or password
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /account/sign-up:
+    post:
+      security: []
+      tags:
+        - Account
+      summary: Register new user
+      description: Registers a new user account.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Invalid input or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /account/reset-password:
+    post:
+      security: []
+      tags:
+        - Account
+      summary: Reset password
+      description: Resets password using a valid token or code.
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        '200':
+          description: Password reset successful
+        '400':
+          description: Invalid token or password
+
+  /account/change-password:
+    post:
+      tags:
+        - Account
+      summary: Change password
+      description: Changes the logged-in user's password.
+      operationId: changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        '200':
+          description: Password changed
+        '400':
+          description: Invalid old password
+
+  /account/token/refresh:
+    post:
+      security: []
+      tags:
+        - Account
+      summary: Refresh access token
+      description: Issues a new access token using refresh token.
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        '400':
+          description: Invalid refresh token
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Get all users
+      description: Retrieves a list of all registered users.
+      operationId: getAllUsers
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      tags:
+        - Users
+      summary: Create user
+      description: Creates a new user (admin use).
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      description: Retrieves user details by ID.
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+    put:
+      tags:
+        - Users
+      summary: Update user
+      description: Updates user data by ID.
+      operationId: updateUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: User updated
+        '404':
+          description: User not found
+    delete:
+      tags:
+        - Users
+      summary: Delete user
+      description: Deletes user by ID.
+      operationId: deleteUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: User deleted
+        '404':
+          description: User not found
+
+components:
+  securitySchemes:
+    accessToken:
+      name: access_token
+      type: apiKey
+      in: header
+    deviceToken:
+      name: device_token
+      type: apiKey
+      in: header
+
+  parameters:
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      description: Preferred language
+      required: true
+      schema:
+        type: Languages
+        enum:
+          - en
+          - hi
+        example: en
+      x-ignore-interface-param: true
+
+  schemas:
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+      required:
+        - username
+        - email
+        - password
+
+    Success:
+      type: object
+      properties:
+        message:
+          type: string
+        messageCode:
+          type: string
+        data:
+          type: object
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
